@@ -49,6 +49,8 @@ Creates an example boilerplate file.
 - [] Rename template to boilerplate in whole project
 - [] Replace all instances of {name}
 - [] Add more variables useable inside boilerplates
+- [] Add cool demo video to readme
+- [] Document extension in readme
 
 # Roadmap
 - [x] Apply boilerplates from config
