@@ -1,19 +1,23 @@
 {
     "templates": {
-        "testOnlyFile": {
-            "name": "{name}.js",
-            "content": "alert(\"Help!\");\r\n"
+        "reactStatelessComponent": {
+            "name": "{name}.component.tsx",
+            "content": "import * as React from 'react';\r\n\r\nexport const {name}: React.StatelessComponent<{}> = (props) => {\r\n    return null;\r\n};"
         },
-        "testStrcuture": {
-            "name": "{name}",
+        "reactMyCoolPage": {
+            "name": "src/pages/{name}",
             "content": [
                 {
+                    "name": "index.tsx",
+                    "content": "import { {name} } from './{name}.tsx';\r\n\r\n\r\n\r\nexport default {name};"
+                },
+                {
                     "name": "{name}.tsx",
-                    "content": "blaaaah"
+                    "content": "import * as React from 'react';\r\n\r\nexport const {name}: React.StatelessComponent<{}> = (props) => {\r\n    return null;\r\n};"
                 },
                 {
                     "name": "{name}.css",
-                    "content": "#coierjge {\r\n  display: none;\r\n}"
+                    "content": ""
                 }
             ]
         }
