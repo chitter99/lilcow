@@ -1,0 +1,21 @@
+{
+    "templates": {
+        "testOnlyFile": {
+            "name": "{name}.js",
+            "content": "alert(\"Help!\");\r\n"
+        },
+        "testStrcuture": {
+            "name": "{name}",
+            "content": [
+                {
+                    "name": "{name}.tsx",
+                    "content": "blaaaah"
+                },
+                {
+                    "name": "{name}.css",
+                    "content": "#coierjge {\r\n  display: none;\r\n}"
+                }
+            ]
+        }
+    }
+}
