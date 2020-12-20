@@ -1,4 +1,18 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+
+
+export class NoWorkspaceIsOpenError extends Error {
+
+}
+
+export class LilCowConfigNotFoundError extends Error {
+
+}
+
+/*
+ * Config operations
+ */
 
 export type Config = {
     templates?: NamedTemplates
@@ -13,30 +27,21 @@ export type Template = {
     content: string | Template[]
 }
 
-export type ApplyProperties = {
-    to?: vscode.Uri,
-    nameInputValue?: string
-}
-
-export class NoWorkspaceIsOpenError extends Error {
-
-}
-
-export class LilCowConfigNotFoundError extends Error {
-
-}
-
-export async function readLocalConfig(): Promise<Config> {
+function getLocalConfigUri(): vscode.Uri {
     let path = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri.toString() + '/.lilcow.json' : null;
 
     if(!path) {
         throw new NoWorkspaceIsOpenError('No workspace or folder is currently open in vscode')
     }
 
-    return readConfig(vscode.Uri.parse(path));
+    return vscode.Uri.parse(path);
 }
 
-export async function readConfig(from: vscode.Uri): Promise<Config> {
+async function readLocalConfig(): Promise<Config> {
+    return readConfig(getLocalConfigUri());
+}
+
+async function readConfig(from: vscode.Uri): Promise<Config> {
     let doc;
 
     try {
@@ -53,6 +58,15 @@ export async function readConfig(from: vscode.Uri): Promise<Config> {
     return JSON.parse(doc.getText()) as Config;
 }
 
+async function saveLocalConfig(config: Config) {
+    return saveConfig(getLocalConfigUri(), config);
+}
+
+async function saveConfig(to: vscode.Uri, config: Config) {
+    let configJson = JSON.stringify(config, null, 2);
+    await vscode.workspace.fs.writeFile(to, Buffer.from(configJson, 'utf-8'));
+}
+
 export async function getTemplates(): Promise<NamedTemplates> {
     let config = await readLocalConfig();
 
@@ -61,6 +75,44 @@ export async function getTemplates(): Promise<NamedTemplates> {
     }
 
     return config.templates;
+}
+
+export async function saveAsBoilerplate(uri: vscode.Uri, name: string) {
+    let config = await readLocalConfig();
+
+    if(!config.templates) {
+        config.templates = {} as NamedTemplates;
+    }  
+
+    config.templates[name] = await generateBoilerplate(uri);
+    await saveLocalConfig(config);
+}
+
+async function generateBoilerplate(from: vscode.Uri): Promise<Template> {
+    let stat = await vscode.workspace.fs.stat(from);
+
+    let content;
+    if(stat.type == vscode.FileType.File) {
+        content = Buffer.from(await vscode.workspace.fs.readFile(from)).toString('utf-8');
+    } else if(stat.type == vscode.FileType.Directory) {
+        content = (await vscode.workspace.fs.readDirectory(from)).map((d) => {
+            return generateBoilerplate(vscode.Uri.parse(from.path + '/' + d[0]));
+        });
+    }
+
+    return {
+        name: path.basename(from.path),
+        content: content
+    } as Template;
+}
+
+/*
+ * Apply template function
+ */
+
+export type ApplyProperties = {
+    to?: vscode.Uri,
+    nameInputValue?: string
 }
 
 export function applyTemplate(template: Template, properties?: ApplyProperties) {

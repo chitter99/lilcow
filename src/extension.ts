@@ -26,6 +26,30 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	context.subscriptions.push(vscode.commands.registerCommand('lilcow.createBoilerplate', async (from: vscode.Uri) => {
-		
+		const templates = await lil.getTemplates();
+
+		if(from.path == vscode.workspace.workspaceFolders[0].uri.path) {
+			vscode.window.showWarningMessage('🐮 We cannot create a template from this directory!');
+			return;
+		}
+
+		let userSelectedNameValue = await vscode.window.showInputBox({ placeHolder: 'MyNewSuperCoolBoilerplate' });
+
+		if(userSelectedNameValue == '') {
+			vscode.window.showWarningMessage('🐮 You need a name for your boilerplate!');
+			return;
+		}
+
+		const userSelectedTemplate = templates[userSelectedNameValue] as lil.Template;
+		if(userSelectedTemplate) {
+			const userSelected = await vscode.window.showQuickPick(['overwrite', 'go back'], {  placeHolder: 'There is already a boilerplate with that name' });
+			if(userSelected == 'go back') {
+				return vscode.commands.executeCommand('lilcow.createBoilerplate', from);
+			}
+		}
+
+		await lil.saveAsBoilerplate(from, userSelectedNameValue);
+
+		vscode.window.showInformationMessage('🐮 Here you go, my jung boy!');
 	}));
 }
